@@ -1,0 +1,145 @@
+//@ title : BlockToon
+//@ date : 2019.5.19
+
+
+pragma solidity ^0.5.8;
+pragma experimental ABIEncoderV2;
+
+contract BlockToon{
+
+    struct Webtoon{  //웹툰 정보
+        string writer;  // 작가
+        string webtoonTitle; // 웹툰 제목
+        string webHashKey; // 썸네일 해시값
+        string writerAddress; // 작가의 계좌주소
+
+    }
+    struct Episode{ // 에피소드 정보
+      string episodeTitle; // 에피소드 제목
+      string episodeHashkey; // 썸네일 해시값
+      string hashKey;    // 에피소드 별 해시값
+      string money;  //에피소드 별 가격
+    }
+
+
+    Webtoon[] webtoon_Array; // 웹툰 정보 구조체의 동적배열
+    Episode[] episode_Array; // 에피소드 정보 구조체의 동적배열.
+
+    mapping (uint => string) EpisodeToWebtoon; //에피소드별 웹툰 제목을 매핑
+    mapping (string => uint) EpisodeCount; //해당하는 웹툰의 에피소드 개수 카운트.
+
+     /*등록하는 함수들*/
+    function addWebtoon(string memory _writer, string memory _webtoonTitle, string memory _webHashKey, string memory _writerAddress) public{ // 웹툰 등록
+        webtoon_Array.push(Webtoon(_writer, _webtoonTitle, _webHashKey,_writerAddress));
+    }
+
+    function addEpisode(string memory _webtoonTitle, string memory _episodeTitle,string memory _episodeHashkey, string memory _hashKey, string memory _money) public{ // 에피소드 등록
+        uint id = episode_Array.push(Episode( _episodeTitle, _episodeHashkey,_hashKey,_money)) - 1; //생성된 작품정보의 번호 0번부터 시작하고 배열의 맨 뒤에 넣는다.
+        EpisodeToWebtoon[id] = _webtoonTitle;// 등록 된 에피소드에 웹툰이름을 매핑시킨다.
+        EpisodeCount[_webtoonTitle]++; //웹툰이름에 해당하는 에피소드 수를 증가시킨다.
+    }
+
+    /*웹툰 정보를 조회하는 함수들*/
+
+    function Webtoon_getWriter() public view returns(string[] memory _writer){ //웹툰 작가이름 조회
+        string[] memory TempWriter = new string[](webtoon_Array.length);
+
+        for(uint i = 0; i< webtoon_Array.length; i++){
+            TempWriter[i] = webtoon_Array[i].writer;
+        }
+          return TempWriter;
+    }
+
+
+
+    function Webtoon_getWebtoonTitle() public view returns(string[] memory _webtoonTitle){ // 웹툰 제목조회
+        string[] memory TempWebtoonTitle = new string[](webtoon_Array.length);
+
+        for(uint i = 0; i< webtoon_Array.length; i++){
+            TempWebtoonTitle[i] = webtoon_Array[i].webtoonTitle;
+        }
+        return TempWebtoonTitle;
+    }
+
+    function Webtoon_getWebHashKey() public view returns(string[] memory _webhashKey){ // 웹툰 대표이미지 해시값 조회
+       string[] memory TempWebHashKey = new string[](webtoon_Array.length);
+
+       for(uint i = 0; i< webtoon_Array.length; i++){
+           TempWebHashKey[i] = webtoon_Array[i].webHashKey;
+       }
+         return TempWebHashKey;
+
+
+    }
+    
+    function webtoon_getWriterAddress() public view returns(string[] memory _writerAddress){ //작가의 계좌주소를 조회하는 함수
+        string[] memory TempWriterAddress = new string[](webtoon_Array.length);
+        
+        for(uint i = 0; i< webtoon_Array.length;i++){
+            TempWriterAddress[i] = webtoon_Array[i].writerAddress;
+        }
+        return TempWriterAddress;
+    }
+
+    /*에피소드 정보를 조회하는 함수들*/
+
+    function Eipsode_getEpisodeTitle(string memory _webtoonTitle) public view returns(string[] memory _episodeTitle){//에피소드 제목 조회
+        string[] memory TempEpisodeTitle = new string[](EpisodeCount[_webtoonTitle]);
+
+        uint j =0;
+
+        for(uint i = 0; i<episode_Array.length; i++){
+            if(keccak256(abi.encode(EpisodeToWebtoon[i])) == keccak256(abi.encode(_webtoonTitle))){
+                TempEpisodeTitle[j] = episode_Array[i].episodeTitle;
+                j++;
+            }
+        }
+        return TempEpisodeTitle;
+    }
+
+
+    function Episode_getEpisodeHashKey(string memory _webtoonTitle) public view returns(string[] memory _episodeHashKey){ // 에피소드 썸네일 해시값 조회
+        string[] memory TempEipsodeHashKey = new string[](EpisodeCount[_webtoonTitle]);
+
+        uint j =0;
+
+        for(uint i = 0; i<episode_Array.length; i++){
+            if(keccak256(abi.encode(EpisodeToWebtoon[i])) == keccak256(abi.encode(_webtoonTitle))){
+                TempEipsodeHashKey[j] = episode_Array[i].episodeHashkey;
+                j++;
+            }
+        }
+        return TempEipsodeHashKey;
+    }
+
+
+
+
+
+    function Episode_getHashKey(string memory _webtoonTitle) public view returns(string[] memory _hashKey){ // 에피소드별 해시값 조회
+        string[] memory TempHashKey = new string[](EpisodeCount[_webtoonTitle]);
+
+        uint j =0;
+        for(uint i = 0; i<episode_Array.length; i++){
+            if(keccak256(abi.encode(EpisodeToWebtoon[i])) == keccak256(abi.encode(_webtoonTitle))){
+                TempHashKey[j] = episode_Array[i].hashKey;
+                j++;
+            }
+        }
+        return TempHashKey;
+    }
+
+
+    function Episode_getMoney(string memory _webtoonTitle) public view returns(string[] memory _Money){//이더 가격 조회
+        string[] memory TempMoney = new string[](EpisodeCount[_webtoonTitle]);
+
+        uint j =0;
+        for(uint i = 0; i<episode_Array.length; i++){
+            if(keccak256(abi.encode(EpisodeToWebtoon[i])) == keccak256(abi.encode(_webtoonTitle))){
+               TempMoney[j] = episode_Array[i].money;
+               j++;
+            }
+        }
+        return TempMoney;
+    }
+}
